@@ -1,0 +1,26 @@
+# main.py
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()  # Make sure this line exists
+
+# Define the Fruit model
+class Fruit(BaseModel):
+    name: str
+    color: str
+
+# Use a list to store fruits
+fruit_data = []
+
+@app.get("/")
+async def read_root():
+    return {"Hello": "World"}
+
+@app.post("/fruit")
+async def post_fruit(fruit: Fruit):
+    fruit_data.append(fruit)  # Store the fruit in the list
+    return fruit_data 
+
+@app.get("/fruits")
+async def get_fruits(limit: int = 5):
+    return fruit_data[:limit]  # Return the specified number of fruits
