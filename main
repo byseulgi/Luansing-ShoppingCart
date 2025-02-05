@@ -2,25 +2,43 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI()  # Make sure this line exists
+app = FastAPI()  
 
-# Define the Fruit model
+
 class Fruit(BaseModel):
     name: str
     color: str
+    price: str
+    qty: str
 
-# Use a list to store fruits
-fruit_data = []
+
+fruit_data = [] #this is where the fruit is stored
 
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    return {"Hello": "World"} 
+
+@app.get("/fruit/view")
+async def view_fruit_table():
+    if fruit_data:
+        return {"fruits": fruit_data}
+    return {"message": "No fruits available in the table."}
 
 @app.post("/fruit")
 async def post_fruit(fruit: Fruit):
     fruit_data.append(fruit)  # Store the fruit in the list
-    return fruit_data 
+    return {"message": "Fruit added successfully", "fruit": fruit}
 
-@app.get("/fruits")
-async def get_fruits(limit: int = 5):
-    return fruit_data[:limit]  # Return the specified number of fruits
+@app.get("/buyfruit")
+async def get_fruit_names():
+    fruit_names = [fruit.name for fruit in fruit_data] 
+   
+    if fruit_names:
+        return {"message": f"You successfully purchased: {', '.join(fruit_names)}"}
+    return {"message": "No fruits available for purchase."}
+
+@app.delete("/fruit/clear")
+async def clear_fruit_table():
+    fruit_data.clear() 
+    return {"message": "The fruit basket has been emptied."}
+
