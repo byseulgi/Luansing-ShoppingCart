@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import List
 
 app = FastAPI()
 
@@ -7,10 +8,15 @@ class Fruit(BaseModel):
     id: int
     name: str
     color: str
-    price: float  # Change price to float for better handling of currency
-    qty: int      # Change qty to int for better handling of quantities
+    price: float  # Price as float
+    qty: int      # Quantity as int
+
+class PurchaseOrder(BaseModel):
+    fruit_name: str
+    quantity: int
 
 fruit_data = []  # This is where the fruit is stored
+purchased_orders: List[PurchaseOrder] = []  # This will store the purchase orders
 
 @app.get("/")
 async def read_root():
@@ -32,7 +38,12 @@ async def buy_fruit(fruit_id: int, quantity: int):
     for fruit in fruit_data:
         if fruit.id == fruit_id:
             if fruit.qty >= quantity:
-                fruit.qty -= quantity 
+                fruit.qty -= quantity  # Decrease the quantity
+                
+                # Create a purchase order
+                purchase_order = PurchaseOrder(fruit_name=fruit.name, quantity=quantity)
+                purchased_orders.append(purchase_order)  # Store the purchase order
+                
                 return {
                     "message": "Successfully purchased",
                     "purchasedFruit": {
@@ -43,6 +54,12 @@ async def buy_fruit(fruit_id: int, quantity: int):
             else:
                 raise HTTPException(status_code=400, detail="Insufficient stock")
     raise HTTPException(status_code=404, detail="Fruit not found")
+
+@app.get("/purchases")
+async def view_purchases():
+    if purchased_orders:
+        return {"purchased_orders": purchased_orders}
+    return {"message": "No purchases have been made."}
 
 @app.delete("/fruit/clear")
 async def clear_fruit_table():
